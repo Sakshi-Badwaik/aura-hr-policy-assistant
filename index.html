@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AURA — HR Policy Assistant (prototype)</title>
+<style>
+:root{--bg:#fbfaf8;--panel:#fff;--ink:#1d1c1d;--mute:#5f5a66;--line:#d9d3df;--side:#3b1f4a;--side2:#4d2c5e;--sidetx:#f6eefa;--acc:#5b2a86;--accbg:#efe6f7;--ok:#1b6e45;--okbg:#e2f4ea;--warn:#7a4f00;--warnbg:#fdf0d2;--bad:#9b1f27;--badbg:#fbe4e5}
+@media (prefers-color-scheme:dark){:root{--bg:#17141b;--panel:#201c26;--ink:#ece8f0;--mute:#b0a9b8;--line:#443d4f;--side:#120c18;--side2:#251a30;--acc:#c6a0ec;--accbg:#2f2340;--ok:#6fd3a0;--okbg:#17342a;--warn:#f0c46a;--warnbg:#3a2e12;--bad:#f19097;--badbg:#3d1a1d}}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:inherit}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 "Segoe UI",system-ui,-apple-system,Helvetica,Arial,sans-serif}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.sr{position:absolute;left:-9999px}
+.app{display:grid;grid-template-columns:250px 1fr;height:100%}
+aside.side{background:var(--side);color:var(--sidetx);padding:16px 14px;overflow:auto}
+aside.side h1{font-size:17px;margin:0}.nh{font-size:13px;margin:18px 0 4px;padding:0 10px}
+.dm{display:block;width:100%;text-align:left;background:var(--side2);border:0;color:inherit;padding:7px 10px;border-radius:6px;font-weight:600}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#4cc38a;margin-right:8px}
+main{display:flex;flex-direction:column;min-width:0;height:100%}
+header.top{display:flex;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+header.top h2{font-size:16px;margin:0}
+.plabel{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--mute)}
+.pill{font-size:12px;padding:2px 8px;border-radius:99px;background:var(--okbg);color:var(--ok)}
+.pill.w{background:var(--warnbg);color:var(--warn)}
+.sp{flex:1}
+.tog{border:1px solid var(--acc);background:none;color:var(--acc);border-radius:8px;padding:4px 12px;font-weight:600}
+.tog[aria-pressed=true]{background:var(--acc);color:var(--bg)}
+.banner{display:flex;gap:10px;align-items:center;background:var(--accbg);color:var(--ink);padding:8px 18px;font-size:13px;border-bottom:1px solid var(--line)}
+.banner.w{background:var(--warnbg)}.banner button{margin-left:auto;border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:2px 10px;font-size:12px}
+[hidden]{display:none!important}
+.view{flex:1;min-height:0;display:none;flex-direction:column}.view.on{display:flex}
+#log{flex:1;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
+.msg{display:flex;gap:10px;max-width:760px}
+.av{width:34px;height:34px;border-radius:7px;flex:none;display:grid;place-items:center;font-weight:700;font-size:13px;background:var(--accbg);color:var(--acc)}
+.msg.me .av{background:var(--line);color:var(--ink)}
+.who{font-weight:700;font-size:13px}.who span{font-weight:400;color:var(--mute);margin-left:6px}
+.body{min-width:0}
+.card{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:10px 12px;margin-top:6px}
+.card.refuse{border-color:var(--bad);background:var(--badbg)}.card.unsure{border-color:var(--warn);background:var(--warnbg)}.card.good{border-color:var(--ok);background:var(--okbg)}
+.card ul{margin:6px 0;padding-left:20px}
+.chips,.acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip,.act{border:1px solid var(--line);background:var(--panel);border-radius:99px;padding:5px 12px;font-size:13px;min-height:32px}
+.chip:hover,.act:hover:not(:disabled){border-color:var(--acc)}
+.chip[aria-pressed=true]{background:var(--acc);color:var(--bg);border-color:var(--acc)}
+.act.p{background:var(--acc);color:var(--bg);border-color:var(--acc)}
+button:disabled{opacity:.6;cursor:default}
+.cite{display:inline;border:0;background:none;color:var(--acc);text-decoration:underline;padding:0;font-size:inherit;text-align:left}
+.seg{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:99px;overflow:hidden;background:var(--panel)}
+.seg button{border:0;background:none;padding:5px 11px;font-size:13px;min-height:32px}.seg button:hover:not(:disabled){background:var(--accbg)}.seg .sl{color:var(--mute)}
+.srcline{margin-top:8px;font-size:14px}
+.meta{font-size:12px;color:var(--mute);margin-top:6px}
+.typing{display:inline-flex;gap:4px;padding:6px 2px}.typing i{width:7px;height:7px;border-radius:50%;background:var(--mute);animation:bl 1s infinite}.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes bl{0%,60%,100%{opacity:.3}30%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.typing i{animation:none;opacity:.6}}
+.sample{padding:8px 18px;border-top:1px solid var(--line);background:var(--panel)}.sample .chips{margin:0}
+form.in{display:flex;gap:8px;padding:10px 18px 4px;background:var(--panel)}
+form.in input{flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;min-width:0}
+form.in button{background:var(--acc);color:var(--bg);border:0;border-radius:8px;padding:0 16px;font-weight:600}
+.foot{font-size:12px;color:var(--mute);padding:2px 18px 10px;background:var(--panel)}
+textarea{width:100%;font:inherit;font-size:14px;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);resize:vertical}
+#drawer{position:fixed;top:0;right:0;bottom:0;width:min(400px,100%);background:var(--panel);border-left:1px solid var(--line);padding:calc(16px + env(safe-area-inset-top,0px)) 16px 16px;transform:translateX(100%);visibility:hidden;transition:transform .2s;overflow:auto;z-index:20}
+#drawer.open{transform:none;visibility:visible}
+.url{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--mute);word-break:break-all}
+.sec{border-left:3px solid var(--line);padding:2px 10px;margin:10px 0}.sec.hit{border-color:var(--acc);background:var(--accbg)}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:grid;place-items:center;z-index:30;padding:16px}
+.mbox{background:var(--panel);border:1px solid var(--line);border-radius:10px;width:min(560px,100%);max-height:100%;overflow:auto;padding:16px}
+.mbox h3,#drawer h3{margin:0 0 4px}.mbox label{display:block;font-size:13px;font-weight:600;margin:10px 0 3px}
+.hrv{padding:18px;overflow:auto;gap:20px;flex-direction:column}
+.hrv h3{margin:0 0 6px;font-size:15px}.hrv section{max-width:980px}
+.ctl{display:flex;flex-wrap:wrap;gap:14px;align-items:center;border:1px dashed var(--line);border-radius:8px;padding:10px 12px}
+.ctl label{display:flex;gap:6px;align-items:center;font-size:13px}
+table{border-collapse:collapse;width:100%;font-size:13px}.tw{overflow-x:auto}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.st{font-weight:600;padding:1px 8px;border-radius:99px;font-size:12px;white-space:nowrap}.st.a{background:var(--okbg);color:var(--ok)}.st.c{background:var(--warnbg);color:var(--warn)}.st.x{background:var(--badbg);color:var(--bad)}
+.empty{color:var(--mute);font-size:13px}
+@media (max-width:720px){
+ .app{grid-template-columns:1fr;grid-template-rows:auto 1fr}aside.side{padding:10px 12px}.nh{display:none}.dm{width:auto}
+ .plabel{font-size:12px}
+ thead{position:absolute;left:-9999px}tr{display:block;border:1px solid var(--line);border-radius:8px;margin-bottom:8px;padding:4px 8px}
+ td{display:flex;gap:8px;border:0;padding:3px 0}td::before{content:attr(data-l);font-weight:600;min-width:96px;color:var(--mute)}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="side" aria-label="Workspace">
+  <h1>Northwind Co.</h1>
+  <div class="nh" id="dmh">Direct messages</div>
+  <button class="dm" aria-current="page" aria-describedby="dmh"><span class="dot" aria-hidden="true"></span>AURA (HR Policy Assistant)</button>
+</aside>
+<main>
+<header class="top"><h2>AURA</h2>
+ <span class="plabel"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Private conversation — only you and AURA can see this.</span>
+ <span class="sp"></span><span class="pill" id="sync" role="status"></span>
+ <button class="tog" id="hrtog" aria-pressed="false">HR view</button></header>
+<div class="banner" id="proto"><span>Prototype with fictional data. No real HR systems or employee records are connected.</span><button id="pclose" aria-label="Dismiss prototype notice">Dismiss</button></div>
+<div class="banner w" id="stale" role="status" hidden>⚠ Some policies may be out of date. Affected topics will be routed to HR.</div>
+
+<section class="view on" id="v-chat" aria-label="Chat with AURA">
+  <div id="log" role="log" aria-live="polite" aria-label="Conversation with AURA" tabindex="0"></div>
+  <div class="sample" role="group" aria-label="Starter questions"><div class="chips" id="samples"></div></div>
+  <form class="in" id="f" aria-label="Message composer"><label class="sr" for="q">Message AURA</label><input id="q" placeholder="Message AURA" autocomplete="off"><button>Send</button></form>
+  <div class="foot">AURA explains policy. It doesn’t approve exceptions or make HR or Finance decisions.</div>
+</section>
+
+<section class="view hrv" id="v-hr" aria-label="HR view">
+  <section><span class="pill w">Prototype — sample data</span>
+   <div class="ctl" style="margin-top:8px" role="group" aria-label="Prototype scenario controls">
+    <label><input type="checkbox" id="conf" checked> Simulate conflicting Remote Work v2.1 draft</label>
+    <label><input type="checkbox" id="fail"> Simulate failed sync (Annual Leave Policy)</label>
+    <button class="act" id="appr">Approve policy update (prototype only)</button>
+    <span class="meta" id="apprmsg" role="status"></span></div></section>
+  <section><h3>Pending escalations</h3><div id="esc"></div></section>
+  <section><h3>Source status</h3><div id="src"></div></section>
+  <section><h3>Feedback themes</h3><div id="fbk"></div></section>
+</section>
+</main>
+</div>
+
+<div id="modal" role="dialog" aria-modal="true" aria-labelledby="mt" hidden><div class="mbox">
+ <div id="mform"><h3 id="mt">Handoff to HR</h3><div class="meta" id="route"></div>
+  <label for="m1">Original question</label><textarea id="m1" rows="2"></textarea>
+  <label for="m2">Conversation summary</label><textarea id="m2" rows="3"></textarea>
+  <label for="m3">Reason for handoff</label><textarea id="m3" rows="2"></textarea>
+  <label for="m4">Policy sources and versions checked</label><textarea id="m4" rows="3"></textarea>
+  <label for="m5">AURA’s prior answer</label><textarea id="m5" rows="4"></textarea>
+  <p class="meta">Only the information needed for review will be shared.</p>
+  <div class="acts"><button class="act p" id="msend">Send to HR</button><button class="act" id="mcancel">Cancel</button></div></div>
+ <div id="mdone" hidden></div></div></div>
+<aside id="drawer" role="dialog" aria-label="Policy source" tabindex="-1"></aside>
+
+<script>
+/* ===== DATA FILE: fictional policies, Northwind Co. ===== */
+const POLICIES={
+ "annual-leave":{title:"Annual Leave Policy",version:"v3.0",effective:"1 Jan 2026",owner:"HR Operations",sections:{"requesting-leave":{name:"Requesting leave",text:"Submit a request in the HR portal at least 5 working days before the leave starts. Manager approval is required before leave is confirmed."},"entitlement":{name:"Entitlement",text:"20 paid days per calendar year for full-time employees."}}},
+ "remote-work":{title:"Remote Work Policy",version:"v2.0",effective:"1 Mar 2026",owner:"HR Operations",sections:{"eligibility":{name:"Eligibility",text:"Employees who have completed probation may work remotely up to 2 days per week with manager approval."},"exceptions":{name:"Exceptions",text:"Requests above 2 days need written HR approval."}}},
+ "shift-allowance":{title:"Shift Allowance Policy",version:"v1.2",effective:"1 Feb 2026",owner:"HR Operations / Finance",sections:{"eligibility":{name:"Eligibility",text:"Employees working scheduled shifts between 10 PM and 6 AM may be eligible."},"approval":{name:"Approval",text:"Eligibility must be confirmed by HR and approved by Finance."}}},
+ "reimbursement":{title:"Reimbursement Policy",version:"v2.1",effective:"1 Jan 2026",owner:"Finance",sections:{"claim-window":{name:"Claim window",text:"Submit expense claims within 30 days of the expense with receipts."}}},
+ "hr-faq":{title:"HR FAQ",version:"v1.0",effective:"1 Jan 2026",owner:"HR Operations",sections:{}}
+};
+/* Demo-only unapproved draft for the conflict scenario */
+const DRAFT={title:"Remote Work Policy",version:"v2.1 (draft)",effective:"not set (unapproved draft)",owner:"HR Operations",text:"Demo draft, not approved: up to 3 days per week with manager approval.",link:"/policies/remote-work-v2-1-draft#eligibility"};
+const STALE_P="annual-leave";
+const REASONS=["Wrong answer","Out of date","Didn’t answer my question","Other"];
+
+const $=s=>document.querySelector(s),log=$("#log");
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const now=Date.now(),D=864e5;
+const state={n:0,lastId:null,offer:false,fb:{},esc:[
+ {ref:"DEMO-1038",q:"Can I expense a co-working day?",topic:"Reimbursement",dest:"HR",status:"Open",srcs:"Reimbursement Policy v2.1",ts:now-2*D},
+ {ref:"DEMO-1040",q:"Does on-call time count for shift allowance?",topic:"Shift Allowance",dest:"HR + Finance",status:"In review",srcs:"Shift Allowance Policy v1.2",ts:now-D}],
+ unans:{"Leave carry-forward":6,"Sick leave":3,"Leave during notice period":2},seedFb:{"Wrong answer":3,"Out of date":2,"Didn’t answer my question":4,"Other":1}};
+const H={};let refN=1042,curId=null,opener=null;
+
+/* ===== Scripted answers (keyword routing; no AI, no retrieval) ===== */
+function base(q){
+ const t=q.toLowerCase().trim();
+ if(/ignore|admin mode|previous instructions|override/.test(t))return{kind:"refuse",text:"I can’t do that. I can only share approved policy information, and I can’t reveal another employee’s confidential records, whatever the instruction. Please contact HR for an authorized request.",esc:"Employee tried to override rules; refused.",topic:"Restricted request"};
+ if(/salary|bonus|pay ?slip|leave balance|financial record|colleague|priya/.test(t))return{kind:"refuse",text:"I can’t provide another employee’s confidential salary or financial information. Please contact HR if you need help with an authorized request.",esc:"Employee asked for restricted information; refused.",topic:"Restricted request"};
+ if(/legal|lawsuit|medical|dispute|approve my|approve it/.test(t)&&!/shift|allowance/.test(t))return{kind:"unsure",text:"That’s outside what I can help with. I explain documented policy, but I can’t approve exceptions, settle disputes, or give legal or medical advice. HR can review this with you.",esc:"Out-of-scope request (approval, dispute, legal or medical).",topic:"Out of scope"};
+ if(t.length<9||/^(leave|policy|help|hr)\??$/.test(t))return{kind:"clarify",text:"Which topic do you mean: annual leave, remote work, shift allowance, or reimbursement?",chips:["How do I request annual leave?","Remote work rules","Shift allowance","Reimbursement deadline"],topic:"Unclear"};
+ if(/remote|wfh|work(ing)? (from|at) home|\bhome\b|hybrid|telework/.test(t)){
+  if($("#conf").checked)return{kind:"unsure",conflict:true,esc:"Conflicting sources: Remote Work Policy v2.0 vs v2.1 (draft).",srcs:"Remote Work Policy v2.0 — Eligibility (up to 2 days/week; effective 1 Mar 2026); Remote Work Policy v2.1 (draft, unapproved) — up to 3 days/week",topic:"Remote work",ask:"Send to HR"};
+  return{kind:"ok",parts:[["Requirement","The Remote Work Policy allows up to 2 remote days per week after probation, with manager approval."],["Approval step","Three days exceeds that and needs written HR approval, so I can’t confirm it."]],cites:[["remote-work","eligibility"],["remote-work","exceptions"]],tail:"Would you like me to contact HR?",esc:"Employee asked about working remotely above 2 days per week."};}
+ if(/carry|forward|rollover/.test(t))return{kind:"unsure",text:"I can’t confirm that. The sample policies in this prototype don’t cover it, and I won’t guess. I can prepare a handoff to HR with your question.",esc:"No approved policy found for: “"+q+"”.",topic:"Leave carry-forward"};
+ if(/sick/.test(t))return{kind:"unsure",text:"I can’t confirm that. The sample policies in this prototype don’t cover it, and I won’t guess.",esc:"No approved policy found for: “"+q+"”.",topic:"Sick leave"};
+ if(/notice period|resign/.test(t))return{kind:"unsure",text:"I can’t confirm that. The sample policies in this prototype don’t cover it, and I won’t guess.",esc:"No approved policy found for: “"+q+"”.",topic:"Leave during notice period"};
+ if(/shift|allowance|night/.test(t))return{kind:"ok",parts:[["Requirement","The Shift Allowance Policy says employees on scheduled shifts between 10 PM and 6 AM may be eligible."],["Approval steps","HR must confirm eligibility and Finance must approve it. I can’t make that decision."]],cites:[["shift-allowance","eligibility"],["shift-allowance","approval"]],tail:"Would you like me to prepare a handoff?",esc:"Shift allowance eligibility and approval request."};
+ if(/reimburs|expense|claim|receipt/.test(t))return{kind:"ok",text:"Submit expense claims within 30 days of the expense, with receipts.",cites:[["reimbursement","claim-window"]],esc:"Reimbursement question."};
+ if(/how many|entitle|days.*leave|paid/.test(t))return{kind:"ok",text:"Full-time employees get 20 paid days per calendar year.",cites:[["annual-leave","entitlement"]],esc:"Annual leave entitlement question."};
+ if(/leave|vacation|holiday/.test(t))return{kind:"ok",text:"Submit your request in the HR portal at least 5 working days before your leave starts. Your manager’s approval is required before the leave is confirmed.",cites:[["annual-leave","requesting-leave"]],esc:"Annual leave request question."};
+ return{kind:"unsure",text:"I can’t find this in the sample policies, so I can’t confirm an answer. I can prepare a handoff to HR.",esc:"No approved policy found for: “"+q+"”.",topic:"Other"};
+}
+function route(q){let r=base(q);
+ if($("#fail").checked&&r.cites&&r.cites.some(c=>c[0]===STALE_P)){const P=POLICIES[STALE_P];
+  r={kind:"unsure",stale:true,text:`I can’t answer this from the ${P.title} right now because it may be out of date. Please send this to HR so they can confirm.`,esc:"Source sync failed; "+P.title+" may be out of date.",srcs:P.title+" "+P.version+" (last sync failed)",topic:"Annual Leave",ask:"Send to HR"};}
+ return r}
+const citeGroup=cs=>[...new Set(cs.map(c=>c[0]))].map(p=>{const P=POLICIES[p],ss=cs.filter(c=>c[0]===p).map(c=>c[1]);return `<button class="cite" data-p="${p}" data-s="${ss.join(",")}">${P.title} — ${ss.map(s=>P.sections[s].name).join(" and ")} (${P.version}, effective ${P.effective})</button>`}).join(" ");
+const srcsOf=r=>r.srcs||(r.cites?r.cites.map(c=>POLICIES[c[0]].title+" "+POLICIES[c[0]].version+" — "+POLICIES[c[0]].sections[c[1]].name).join("; "):"None found");
+function mk(q,r){
+ const conv={ok:"AURA gave a scripted policy answer.",unsure:"AURA could not confirm an answer.",refuse:"AURA declined a request for restricted information.",clarify:"AURA asked a clarifying question."}[r.kind];
+ const ans=r.conflict?"I found two conflicting versions of the remote-work rule, so I can’t confirm the answer. Remote Work Policy v2.0 — up to 2 days per week. Remote Work Policy v2.1 (draft) — up to 3 days per week.":(r.parts?r.parts.map(p=>p[0]+": "+p[1]).join(" "):r.text)+(r.tail?" "+r.tail:"");
+ return{q,conv:`Employee asked: “${q}”. ${conv} Employee requested HR follow-up.`,reason:r.esc||"Employee requested HR follow-up.",srcs:srcsOf(r),answer:ans,topic:r.topic||(r.cites?POLICIES[r.cites[0][0]].title.replace(" Policy",""):"General"),dest:(r.cites&&r.cites.some(c=>c[0]==="shift-allowance"))?"HR + Finance":"HR"};
+}
+
+/* ===== Chat ===== */
+function add(who,html,isHtml){
+ const d=document.createElement("div");d.className="msg"+(who==="me"?" me":"");
+ d.innerHTML=`<div class="av" aria-hidden="true">${who==="me"?"You":"AU"}</div><div class="body"><div class="who">${who==="me"?"You":"AURA"}<span>${new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}</span></div><div class="txt"></div></div>`;
+ const t=d.querySelector(".txt");isHtml?t.innerHTML=html:t.textContent=html;log.appendChild(d);log.scrollTop=log.scrollHeight;return t}
+function render(r,id){
+ const cls=r.kind==="refuse"?"refuse":r.kind==="unsure"?"unsure":"";
+ let h=`<div class="card ${cls}">`;
+ if(r.conflict)h+=`<div>I found two conflicting versions of the remote-work rule, so I can’t confirm the answer.</div><ul><li><button class="cite" data-p="remote-work" data-s="eligibility">Remote Work Policy v2.0</button> — up to 2 days per week <span class="meta">(Eligibility, effective ${POLICIES["remote-work"].effective})</span></li><li><button class="cite" data-draft="1">Remote Work Policy v2.1 (draft)</button> — up to 3 days per week <span class="meta">(Eligibility, unapproved, ${DRAFT.effective})</span></li></ul><div>I’ll send this to HR so they can confirm which applies.</div>`;
+ else h+=r.parts?r.parts.map(([l,x])=>`<div><b>${l}:</b> ${esc(x)}</div>`).join(""):esc(r.text);
+ if(r.cites)h+=`<div class="srcline">Source: ${citeGroup(r.cites)}</div>`;
+ if(r.tail)h+=`<div style="margin-top:8px">${esc(r.tail)}</div>`;
+ h+="</div>";
+ if(r.chips)h+=`<div class="chips">${r.chips.map(c=>`<button class="chip" data-q="${esc(c)}">${esc(c)}</button>`).join("")}</div>`;
+ h+=`<div class="acts" data-id="${id}">`;
+ if(r.conflict)h+=`<button class="act" data-both="1">Open both sources</button>`;
+ else if(r.cites)h+=`<button class="act" data-open="${r.cites[0].join("|")}">Open policy</button>`;
+ h+=`<span class="seg" role="group" aria-label="Rate this answer"><button data-fb="up">Helpful</button><span class="sl" aria-hidden="true">/</span><button data-fb="down">Not helpful</button></span><button class="act ${r.kind==="unsure"?"p":""}" data-ask="1">${r.ask||"Ask HR"}</button></div><div class="fbx" data-id="${id}" role="status"></div>`;
+ return h}
+function ask(q){
+ if(!q.trim())return;const t0=q.toLowerCase().trim();
+ if(/handoff|hand off|contact hr|ask hr|send to hr|talk to (a )?(human|hr|person)/.test(t0)||(state.offer&&/^(yes|yeah|yep|sure|ok|okay|please)\b/.test(t0))){
+  add("me",q);if(state.lastId){add("aura","Opening the handoff form so you can review what will be shared.");openModal(state.lastId)}else add("aura","Ask a policy question first, then I can prepare a handoff for it.");return}
+ add("me",q);const r=route(q),id=++state.n;H[id]=mk(q,r);
+ if(r.kind!=="clarify")state.lastId=id;state.offer=!!(r.tail||r.kind==="unsure");
+ if(r.kind==="unsure"&&!r.conflict&&!r.stale&&!/Out of scope/.test(r.topic))state.unans[r.topic]=(state.unans[r.topic]||0)+1;
+ const th=add("aura",'<span class="typing" role="status" aria-label="AURA is typing"><i></i><i></i><i></i></span>',true);
+ setTimeout(()=>{th.innerHTML=render(r,id);log.scrollTop=log.scrollHeight},1100)}
+log.addEventListener("click",e=>{
+ const b=e.target.closest("button");if(!b)return;
+ if(b.dataset.q)return ask(b.dataset.q);
+ if(b.dataset.draft)return openSrc("remote-work","",b);
+ if(b.dataset.both)return openBoth(b);
+ if(b.dataset.p)return openSrc(b.dataset.p,b.dataset.s,b);
+ if(b.dataset.open){const[p,s]=b.dataset.open.split("|");return openSrc(p,s,b)}
+ const own=b.closest("[data-id]"),id=own&&own.dataset.id;
+ if(b.dataset.ask)return openModal(id,b);
+ if(b.dataset.fb)return rate(id,b.dataset.fb,b);
+ if(b.dataset.reason)return b.parentElement.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed",c===b&&b.getAttribute("aria-pressed")!=="true"));
+ if(b.dataset.fsubmit){const f=state.fb[id],x=own;const sel=x.querySelector('.chip[aria-pressed="true"]');
+  f.reason=sel?sel.dataset.reason:"No reason given";f.note=x.querySelector("textarea").value.trim();
+  x.innerHTML=`<div class="card good">Thanks, your feedback is recorded. <b>This question is still open.</b> If you still need an answer, ask HR.<div class="acts"><button class="act p" data-ask="1">Ask HR</button></div></div>`}});
+function rate(id,v,b){
+ const bar=b.closest(".acts"),x=bar.nextElementSibling;bar.querySelectorAll("[data-fb]").forEach(k=>k.disabled=true);b.setAttribute("aria-pressed","true");
+ state.fb[id]={id,q:H[id].q,topic:H[id].topic,rating:v,reason:v==="up"?"":"No reason given",note:"",escalated:false};
+ if(v==="up")x.innerHTML='<div class="meta">Thanks for the feedback.</div>';
+ else{x.innerHTML=`<div class="card"><b>Sorry that didn’t help.</b> What went wrong? <span class="meta">(optional)</span><div class="chips" role="group" aria-label="Reason">${REASONS.map(r=>`<button class="chip" data-reason="${r}" aria-pressed="false">${r}</button>`).join("")}</div><label class="sr" for="n${id}">Short note (optional)</label><textarea id="n${id}" rows="2" maxlength="200" placeholder="Add a short note (optional)" style="margin-top:8px"></textarea><div class="acts"><button class="act" data-fsubmit="1">Submit feedback</button><button class="act p" data-ask="1">Ask HR</button></div><div class="meta">This question stays open until you’re happy with the answer. Ask HR if you still need help.</div></div>`;x.querySelector(".chip").focus()}}
+
+/* ===== Drawer ===== */
+function sec(k,v,p,hit){return `<div class="sec ${hit?"hit":""}"><b>${v.name}</b><div>${v.text}</div><div class="url">/policies/${p}#${k}</div></div>`}
+function openDrawer(html,from){opener=from||document.activeElement;const d=$("#drawer");d.innerHTML=`<button class="act" id="dx" style="float:right">Close</button>${html}<div class="meta">Placeholder links; fictional content.</div>`;d.classList.add("open");$("#dx").focus();$("#dx").onclick=closeDrawer}
+function closeDrawer(){$("#drawer").classList.remove("open");if(opener&&opener.focus)opener.focus()}
+function openSrc(p,s,from){const P=POLICIES[p];openDrawer(`<h3>${P.title}</h3><div class="meta">${P.version} · effective ${P.effective} · owner: ${P.owner}</div>${Object.entries(P.sections).map(([k,v])=>sec(k,v,p,s.split(",").includes(k))).join("")||'<p class="empty">No sections in this demo document.</p>'}`,from)}
+function openBoth(from){const P=POLICIES["remote-work"];openDrawer(`<h3>Remote Work Policy: two versions</h3><div class="meta">Neither is confirmed as the rule that applies.</div><h4>v2.0 · effective ${P.effective}</h4>${sec("eligibility",P.sections.eligibility,"remote-work",true)}<h4>v2.1 (draft) · ${DRAFT.effective}</h4><div class="sec hit"><b>Eligibility</b><div>${DRAFT.text}</div><div class="url">${DRAFT.link}</div></div>`,from)}
+
+/* ===== Handoff modal ===== */
+function openModal(id,from){const h=H[id];if(!h)return;curId=id;opener=from||document.activeElement;
+ $("#m1").value=h.q;$("#m2").value=h.conv;$("#m3").value=h.reason;$("#m4").value=h.srcs;$("#m5").value=h.answer;
+ $("#route").textContent="Routes to: "+h.dest+" queue (simulated)";$("#mform").hidden=false;$("#mdone").hidden=true;$("#modal").hidden=false;$("#m1").focus()}
+function closeModal(){if($("#modal").hidden)return;$("#modal").hidden=true;if(opener&&opener.focus)opener.focus()}
+$("#mcancel").onclick=closeModal;$("#modal").addEventListener("click",e=>{if(e.target.id==="modal")closeModal()});
+$("#msend").onclick=()=>{const h=H[curId],ref="DEMO-"+(refN++),msg="Handoff prepared for the HR queue (prototype — no real ticket was created).";
+ state.esc.push({ref,q:$("#m1").value,topic:h.topic,dest:h.dest,status:"Pending (demo)",srcs:$("#m4").value,ts:Date.now()});
+ if(state.fb[curId])state.fb[curId].escalated=true;
+ $("#mdone").innerHTML=`<h3>Handoff to HR</h3><div class="card good">✅ ${msg}</div><p>Reference: <b>${ref}</b> <span class="meta">(simulated reference, not a real ticket)</span></p><p class="meta">Routed to: ${h.dest} (simulated). It now appears in the HR view.</p><div class="acts"><button class="act p" id="mclose">Close</button></div>`;
+ $("#mform").hidden=true;$("#mdone").hidden=false;$("#mclose").onclick=closeModal;$("#mclose").focus();
+ add("aura",`<div class="card good">✅ ${msg}<div class="meta">Simulated reference: <b>${ref}</b></div></div>`,true);renderHR()};
+document.addEventListener("keydown",e=>{
+ if(e.key==="Escape"){if(!$("#modal").hidden)closeModal();else closeDrawer()}
+ if(e.key==="Tab"&&!$("#modal").hidden){const f=[...$("#modal").querySelectorAll("textarea,button")].filter(x=>!x.closest("[hidden]"));const a=f[0],z=f[f.length-1];
+  if(e.shiftKey&&document.activeElement===a){e.preventDefault();z.focus()}else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus()}}});
+
+/* ===== HR view ===== */
+const tbl=(h,rows)=>`<div class="tw"><table><thead><tr>${h.map(x=>`<th scope="col">${x}</th>`).join("")}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map((c,i)=>`<td data-l="${h[i]}">${c}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+const age=ts=>{const m=Math.floor((Date.now()-ts)/6e4);return m<1?"just now":m<60?m+" min":m<1440?Math.floor(m/60)+" h":Math.floor(m/1440)+" d"};
+const chip=(c,t)=>`<span class="st ${c}">${t}</span>`;
+function renderHR(){
+ $("#esc").innerHTML=tbl(["ID","Question","Topic","Routed to","Status","Sources / versions","Age"],[...state.esc].reverse().map(e=>[e.ref+' <span class="meta">(simulated)</span>',esc(e.q),esc(e.topic),e.dest,e.status,esc(e.srcs),age(e.ts)]));
+ const fail=$("#fail").checked,conf=$("#conf").checked;
+ $("#src").innerHTML=tbl(["Policy","Version","Owner","Effective","Last synced","Status"],Object.entries(POLICIES).map(([k,P])=>{
+  if(k==="remote-work"&&conf)return[P.title,"v2.0 (active) and v2.1 (unapproved draft)",P.owner,P.effective+"; draft not set","Today, 02:00",chip("c","⚠ Conflict")+'<div class="meta">Two active documents: v2.0 says 2 days/week, draft v2.1 says 3 days/week.</div>'];
+  if(k===STALE_P&&fail)return[P.title,P.version,P.owner,P.effective,"Sync failed (last good: yesterday, 02:00)",chip("x","✖ Expired")+'<div class="meta">Answers escalate to HR.</div>'];
+  return[P.title,P.version,P.owner,P.effective,"Today, 02:00",chip("a","✔ Active")]}));
+ const cnt={};REASONS.forEach(r=>cnt[r]=[state.seedFb[r]||0,0]);let open=0;const rows=[];
+ Object.values(state.fb).forEach(f=>{if(f.rating==="down"){const r=REASONS.includes(f.reason)?f.reason:null;if(r)cnt[r][1]++;if(!f.escalated)open++;rows.push([esc(f.q),"Not helpful",esc(f.reason)+(f.note?": "+esc(f.note):""),f.escalated?"Escalated to HR":"Open: no HR follow-up yet"])}else rows.push([esc(f.q),"Helpful","","Closed"])});
+ const ua=Object.entries(state.unans).sort((a,b)=>b[1]-a[1]);
+ $("#fbk").innerHTML=tbl(["Reason","Count","Sample / this session"],REASONS.map(r=>[r,cnt[r][0]+cnt[r][1],cnt[r][0]+" / "+cnt[r][1]]))
+  +`<h3 style="margin-top:14px">Most frequent unanswered topics</h3>`+tbl(["Topic","Questions"],ua.map(([t,n])=>[esc(t),n]))
+  +`<h3 style="margin-top:14px">This session's feedback ${open?chip("c",open+" open"):""}</h3>`+(rows.length?tbl(["Question","Rating","Reason","Status"],rows):'<p class="empty">No feedback yet. Rate an answer in chat.</p>')}
+function syncUI(){const f=$("#fail").checked;$("#sync").textContent=f?"⚠ Sync failed: some policies may be out of date":"Last synced: today, 02:00";$("#sync").className="pill"+(f?" w":"");$("#stale").hidden=!f}
+$("#conf").onchange=()=>renderHR();$("#fail").onchange=()=>{syncUI();renderHR()};
+$("#appr").onclick=()=>{$("#apprmsg").textContent="Prototype only: no policy was approved, changed or published."};
+$("#hrtog").onclick=e=>{const on=$("#v-hr").classList.toggle("on");$("#v-chat").classList.toggle("on",!on);e.currentTarget.setAttribute("aria-pressed",on);e.currentTarget.textContent=on?"Back to chat":"HR view";if(on)renderHR()};
+$("#pclose").onclick=()=>$("#proto").hidden=true;
+$("#f").onsubmit=e=>{e.preventDefault();const v=$("#q").value;$("#q").value="";ask(v)};
+const S=["How do I request annual leave?","Can I work from home three days a week?","Am I eligible for shift allowance?","Can I carry forward unused leave?","What is my colleague’s salary?","How many remote days are allowed?"];
+$("#samples").innerHTML=S.map(s=>`<button class="chip" data-q="${esc(s)}">${esc(s)}</button>`).join("");
+$("#samples").onclick=e=>{const b=e.target.closest("[data-q]");if(b)ask(b.dataset.q)};
+syncUI();
+add("aura","Hi, I’m AURA. This prototype shows scripted answers based on a few fictional Northwind Co. policies. Try a starter question below.");
+</script>
+</body>
+</html>
